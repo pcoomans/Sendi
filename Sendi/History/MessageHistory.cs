@@ -6,16 +6,16 @@ namespace Sendi.History
 {
     public class MessageHistory : Dictionary<int, MessageHistoryOneMessageType>
     {
-        public void Add(IMessage m)
+        public void Add(AbstractMessage m)
         {
             MessageHistoryOneMessageType omth;
-            if (!this.TryGetValue(m.GetMessageTypeId(), out omth))
+            if (!this.TryGetValue(m.MessageConfig.GetMessageTypeId(), out omth))
             {
                 omth = new MessageHistoryOneMessageType();
-                this[m.GetMessageTypeId()] = omth;
+                this[m.MessageConfig.GetMessageTypeId()] = omth;
             }
 
-            omth[m.GetMessageId()] = m;
+            omth[m.MessageConfig.MsgSequenceNr] = m;
         }
 
         public MessageHistoryOneMessageType GetMessageListOfType(int messageTypeId)

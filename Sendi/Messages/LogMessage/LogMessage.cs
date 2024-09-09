@@ -12,34 +12,23 @@ namespace Sendi.Messages.LogMessage
     }
 
     [DataContract]
-    public class LogData : IMessageData
-    {
-        [DataMember]
-        public EnmLogLevel LogLevel { get; private set; }
+	public class LogMessage : AbstractMessage
+	{
+		[DataMember]
+		public EnmLogLevel LogLevel { get; private set; }
 
-        [DataMember]
-        public string LogString { get; private set; }
+		[DataMember]
+		public string LogString { get; private set; }
 
-        public LogData(EnmLogLevel logLevel, string logString)
-        {
-            this.LogLevel = logLevel;
-            this.LogString = logString;
-        }
-        public int GetMessageId()
-        {
-            return 1;
-        }
+		public LogMessage(EnmLogLevel logLevel, string logString)
+		{
+			this.LogLevel = logLevel;
+			this.LogString = logString;
+		}
 
-        public override string ToString()
-        {
-            return $"LogData: LogLevel={this.LogLevel}/LogString={this.LogString}";
-        }
-
-    }
-
-    public class LogMessage : Message<LogData>
-    {
-        public LogMessage(LogData data) : base(data)
-        { }
-    }
+		public override string ToString()
+		{
+			return $"LogMessage: LogLevel={this.LogLevel}/LogString={this.LogString}";
+		}
+	}
 }

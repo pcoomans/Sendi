@@ -35,13 +35,13 @@ namespace SendiDemo1
             messageClient.Stop();
         }
 
-        public void MsgColorReceived(IMessage message)  
+        public void MsgColorReceived(AbstractMessage message)  
         {
 			if (message is MsgColor msgColor)
 			{
 				Application.Current.Dispatcher.Invoke((Action)delegate
 				{
-					this.Background = msgColor.MessageData.Brush;
+					this.Background = msgColor.Brush;
 				});
 			}
         }
