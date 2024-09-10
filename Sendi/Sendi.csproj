@@ -11,9 +11,10 @@
   <PropertyGroup>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
-  
   <ItemGroup>
-    <Folder Include="GuiViewer\" />
+    <Compile Remove="GuiViewer\**" />
+    <EmbeddedResource Remove="GuiViewer\**" />
+    <None Remove="GuiViewer\**" />
   </ItemGroup>
 
 </Project>

@@ -13,7 +13,7 @@ namespace Sendi.Client
         /// Forward a message to send to the dispatcher
         /// </summary>
         /// <param name="msg"></param>
-        void SendMessage(IMessage msg);
+        void SendMessage(AbstractMessage msg);
 
         /// <summary>
         /// Set mode to open or close a filter 
@@ -32,7 +32,7 @@ namespace Sendi.Client
         /// </summary>
         /// <param name="msgType"></param>
         //void AddMsgTypeToFilter(Type msgType);
-        void AddMsgTypeToFilter(IMessage msgExample, MessageReceived refToFunctionToHandleMessages);
+        void AddMsgTypeToFilter(AbstractMessage msgExample, MessageReceived refToFunctionToHandleMessages);
 
         /// <summary>
         /// Remove a MsgType from the filter, to receive it no longer 
@@ -55,7 +55,7 @@ namespace Sendi.Client
         /// </summary>
         /// <param name="msgType"></param>
         //void GetBufferedMessagesOfType(Type msgType);
-        void GetBufferedMessagesOfType(IMessage msgExample);
+        void GetBufferedMessagesOfType(AbstractMessage msgExample);
 
     }
 }

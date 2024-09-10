@@ -2,5 +2,5 @@
 
 namespace Sendi.Client
 {
-    public delegate void MessageReceived(IMessage msg);
+    public delegate void MessageReceived(AbstractMessage msg);
 }

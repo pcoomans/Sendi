@@ -86,10 +86,10 @@ namespace Sendi.Client
 
         private void ProcessReceivedMessages()
         {
-            IMessage m = GetNextMessage();
+			AbstractMessage m = GetNextMessage();
             while (m != null)
             {
-                if (this.acceptedMsgTypeIds.TryGetValue(m.GetMessageTypeId(), out MessageReceived refToMsgReceivedFunction))
+                if (this.acceptedMsgTypeIds.TryGetValue(m.MessageConfig.GetMessageTypeId(), out MessageReceived refToMsgReceivedFunction))
                 {
                     if (refToMsgReceivedFunction != null)
                         refToMsgReceivedFunction(m);

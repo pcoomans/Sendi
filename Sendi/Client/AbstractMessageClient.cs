@@ -11,17 +11,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sendi.Client
 {
-    /// <summary>
-    /// <c>AbstractMessageClient</c> is the base class for message clients.
-    /// To be used in combination with <c>MessageDispatcher</c>
-    /// </summary>
-    public abstract class AbstractMessageClient : IMessageClient, IMessageClientForDispatcher
+	/// <summary>
+	/// <c>AbstractMessageClient</c> is the base class for message clients.
+	/// To be used in combination with <c>MessageDispatcher</c>
+	/// </summary>
+	public abstract class AbstractMessageClient : IMessageClient, IMessageClientForDispatcher
     {
 
 
@@ -55,7 +53,7 @@ namespace Sendi.Client
         protected Dictionary<int, MessageReceived> acceptedMsgTypeIds = new Dictionary<int, MessageReceived>();
 
         //
-        private List<IMessage> lstDroppedMessages = new List<IMessage>();
+        private List<AbstractMessage> lstDroppedMessages = new List<AbstractMessage>();
         protected AutoResetEvent eventMsgDropped = new AutoResetEvent(false);
         private MessageDispatcher msgDispatcher = null;
 
@@ -73,7 +71,7 @@ namespace Sendi.Client
         /// Function to be used by the <c>MessageDispatcher</c> to deliver a message to the <c>MessageClient</c>.
         /// </summary>
         /// <param name="msg">Any message object that implements the <c>IMessage</c> interface.</param>
-        public virtual void DropMessage(IMessage msg)
+        public virtual void DropMessage(AbstractMessage msg)
         {
             // check if filter allows this kind of message
             bool accept;
@@ -144,12 +142,12 @@ namespace Sendi.Client
         /// messages to all other <c>MessageClient</c> instances.
         /// </summary>
         /// <param name="msg">Any message object that implements the <c>IMessage</c> interface.</param>
-        public virtual void SendMessage(IMessage msg)
+        public virtual void SendMessage(AbstractMessage msg)
         {
             if (this.msgDispatcher != null)
             {
-                if (msg.Sender == null)
-                    msg.Sender = this;
+                if (msg.MessageConfig.Sender == null)
+                    msg.MessageConfig.Sender = this;
                 this.msgDispatcher.SendMessage(msg, this);
             }
         }
@@ -172,29 +170,49 @@ namespace Sendi.Client
         {
             this.acceptedMsgTypeIds.Clear();
         }
-        public virtual void AddMsgTypeToFilter(IMessage msgExample, MessageReceived refHandleMessageFunction)
+        public virtual void AddMsgTypeToFilter(AbstractMessage msgExample, MessageReceived refHandleMessageFunction)
         {
-            int messageTypeId = msgExample.GetMessageTypeId();
+            int messageTypeId = msgExample.MessageConfig.GetMessageTypeId();
             this.acceptedMsgTypeIds[messageTypeId] = refHandleMessageFunction;
         }
-        //public virtual void AddMsgTypeToFilter(Type msgType)
-        //{
-        //    //            object result = Activator.CreateInstance(msgType);
+        public virtual void AddMsgTypeToFilter(Type msgType, MessageReceived refHandleMessageFunction)
+        {
+            //            object result = Activator.CreateInstance(msgType);
 
-        //    // CALL STATIC CONSTRUCTIOR ??
-        //    //object result = Activator.CreateInstance(msgType);
+            // CALL STATIC CONSTRUCTIOR ??
+            object result = Activator.CreateInstance(msgType);
+            if( result is AbstractMessage msg)
+            {
+			    int _messageTypeId = msg.MessageConfig.GetMessageTypeId();
+			    this.acceptedMsgTypeIds[_messageTypeId] = refHandleMessageFunction;
 
-        //    System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(msgType.TypeHandle);
+            }
 
-        //    FieldInfo info = msgType.GetField("MessageTypeId", BindingFlags.Static);
-        //    int messageTypeId = (int)info.GetValue(null);
+            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(msgType.TypeHandle);
 
-        //    if (!this.acceptedMsgTypeIds.Contains(messageTypeId))
-        //    {
-        //        this.acceptedMsgTypeIds.Add(messageTypeId);
-        //    }
-        //}
-        public virtual void RemoveMsgTypeFromFilter(Type msgType)
+            FieldInfo info = msgType.GetField("MessageTypeId", BindingFlags.Static);
+            int messageTypeId = (int)info.GetValue(null);
+
+		}
+
+		//public virtual void AddMsgTypeToFilter(Type msgType)
+		//{
+		//    //            object result = Activator.CreateInstance(msgType);
+
+		//    // CALL STATIC CONSTRUCTIOR ??
+		//    //object result = Activator.CreateInstance(msgType);
+
+		//    System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(msgType.TypeHandle);
+
+		//    FieldInfo info = msgType.GetField("MessageTypeId", BindingFlags.Static);
+		//    int messageTypeId = (int)info.GetValue(null);
+
+		//    if (!this.acceptedMsgTypeIds.Contains(messageTypeId))
+		//    {
+		//        this.acceptedMsgTypeIds.Add(messageTypeId);
+		//    }
+		//}
+		public virtual void RemoveMsgTypeFromFilter(Type msgType)
         {
             FieldInfo info = msgType.GetField("MessageTypeId", BindingFlags.Static);
             int messageTypeId = (int)info.GetValue(null);
@@ -225,9 +243,9 @@ namespace Sendi.Client
             }
             return count;
         }
-        protected IMessage GetNextMessage()
+        protected AbstractMessage GetNextMessage()
         {
-            IMessage msg = null;
+			AbstractMessage msg = null;
             bool acquiredLock = false;
             try
             {
@@ -246,16 +264,15 @@ namespace Sendi.Client
             }
             return msg;
         }
-        public void GetBufferedMessagesOfType(IMessage msgExample)
+        public void GetBufferedMessagesOfType(AbstractMessage msgExample)
         {
-            int messageTypeId = msgExample.GetMessageTypeId();
+            int messageTypeId = msgExample.MessageConfig.GetMessageTypeId();
 
             this.msgDispatcher.SendMessage(
                 new SystemCommandMessage(
-                    new SystemCommandData(
                         Messages.SystemCommandMessage.EnmSystemCommands.CMD_RESEND_ALL_MSGS_OF_TYPE,
                         "MessageDispatcher",
-                        messageTypeId.ToString())), 
+                        messageTypeId.ToString()), 
                 this);
         }
 

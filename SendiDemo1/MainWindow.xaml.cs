@@ -35,20 +35,33 @@ namespace SendiDemo1
 			mdp = MessageDispatcher.GetMessageDispatcher();
 			mdp.Start(false, 0);
 
+			mdp.StatsDataChanged += Mdp_StatsDataChanged;
+
 			smc = new SimpleMessageClient("main");
 			smc.SetDispatcher(mdp);
 			smc.SetFilterMode(AbstractMessageClient.EnmFilterMode.Filter);
-			smc.AddMsgTypeToFilter(new MsgColor(null), MsgColorReceived);
+			smc.AddMsgTypeToFilter(typeof(MsgColor), MsgColorReceived);
 			smc.Start();
+			smc.receiveOwnMessages = false;
 		}
 
-		public void MsgColorReceived(IMessage message)
+		private void Mdp_StatsDataChanged(object sender, StatsDataChangedEventArgs e)
+		{
+			Application.Current.Dispatcher.Invoke((Action)delegate
+			{
+				LblNrClients.Content = $"{e.TotalNrAttachedClients}";
+				LblNrReceivedMsgs.Content = $"{e.TotalNrReceivedMessages}";
+				LblNrSentMsgs.Content = $"{e.TotalNrSentMessages}";
+			});
+		}
+
+		public void MsgColorReceived(AbstractMessage message)
 		{
 			if (message is MsgColor msgColor)
 			{
 				Application.Current.Dispatcher.Invoke((Action)delegate
 				{
-					this.Background = msgColor.MessageData.Brush;
+					this.Background = msgColor.Brush;
 				});
 			}
 		}
@@ -78,13 +91,8 @@ namespace SendiDemo1
 			Color c = e.NewValue.Value;
 			SolidColorBrush scb = new SolidColorBrush(c);
 
-			MsgColor mc = new MsgColor(new MsgColorData(scb));
+			MsgColor mc = new MsgColor(scb);
 			smc.SendMessage(mc);
-
-			SendiStats stats = mdp.GetStats();
-			LblNrClients.Content = $"{stats.TotalNrAttachedClients}";
-			LblNrReceivedMsgs.Content = $"{stats.TotalNrReceivedMessages}";
-			LblNrSentMsgs.Content = $"{stats.TotalNrSentMessages}";
 		}
 	}
 }

@@ -2,7 +2,7 @@
 // Project:      Sendi
 // Class Name:   MessageDispatcher
 // Description:  This class is the central unit in the internal messaging system.
-//               Clients based on AbstractMessageClientt can connect to send
+//               Clients based on AbstractMessageClient can connect to send
 //               and receive messages
 //*************************************************************************
 
@@ -16,10 +16,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Timers;
 
 namespace Sendi.Dispatcher
 {
-    public class MessageDispatcher : MarshalByRefObject, IMessageComponent
+    public class MessageDispatcher : MarshalByRefObject, IMessageComponent, IDisposable
     {
         #region Singleton related
 
@@ -29,9 +30,48 @@ namespace Sendi.Dispatcher
             return messageDispatcher;
         }
 
-        #endregion
+		#endregion
 
-        private List<IMessageClientForDispatcher> _msgClients = new List<IMessageClientForDispatcher>();
+		#region StatsDataChanged Event
+
+		public event EventHandler<StatsDataChangedEventArgs> StatsDataChanged;
+
+		protected virtual void OnStatsDataChanged()
+		{
+			EventHandler<StatsDataChangedEventArgs> handler = StatsDataChanged;
+			if (handler != null)
+			{
+				handler(this, new StatsDataChangedEventArgs(sendiStats));
+			}
+		}
+
+		#endregion
+
+		#region Delayed StatsDataChanged Event
+
+		/// <summary>
+		/// Use this function to limit the nr of events to max 10 per second
+		/// Stick to the standard 'OnStatsDataChanged' to fire the event immediately
+		/// </summary>
+		protected virtual void OnStatsDataChanged_Delayed()
+        {
+			EventHandler<StatsDataChangedEventArgs> handler = StatsDataChanged;
+			if (handler != null && !timer.Enabled)
+            {
+				timer.Enabled = true;
+			}
+		}
+
+        private System.Timers.Timer timer;
+		public void TimerElapsedEventHandler(object sender, ElapsedEventArgs e)
+        {
+			timer.Enabled = false;
+            OnStatsDataChanged();
+		}
+
+		#endregion
+
+		private List<IMessageClientForDispatcher> _msgClients = new List<IMessageClientForDispatcher>();
 
         public override Object InitializeLifetimeService()
         {
@@ -60,7 +100,7 @@ namespace Sendi.Dispatcher
             return this.lastUsedSequenceNr;
         }
 
-        private List<IMessage> lstDroppedMessages = new List<IMessage>();
+        private List<AbstractMessage> lstDroppedMessages = new List<AbstractMessage>();
         protected AutoResetEvent eventMsgDropped = new AutoResetEvent(false);
 
         //Threading properties
@@ -76,15 +116,21 @@ namespace Sendi.Dispatcher
 
         const int MAX_MUTEX_WAIT_TIME = 5000;
 
-        private MessageDispatcher()
+		private bool _disposed = false;
+
+		private MessageDispatcher()
         {
             sendiStats = new SendiStats();
-        }
 
-        public virtual void SendMessage(IMessage msg, IMessageComponent sender)
+			timer = new System.Timers.Timer(200);
+			timer.Elapsed += TimerElapsedEventHandler;
+            timer.Enabled = false;
+		}
+
+		public virtual void SendMessage(AbstractMessage msg, IMessageComponent sender)
         {
-            if (msg.Sender == null)
-                msg.Sender = sender;
+            if (msg.MessageConfig.Sender == null)
+                msg.MessageConfig.Sender = sender;
 
             bool acquiredLock = false;
             try
@@ -115,6 +161,8 @@ namespace Sendi.Dispatcher
 
                 if (this.detailedLoggingActive)
                     this.SysLog(String.Format("Attached msg client: {0}",msgClient.refName));
+
+                OnStatsDataChanged();
             }
             finally
             {
@@ -135,8 +183,10 @@ namespace Sendi.Dispatcher
 				sendiStats.TotalNrAttachedClients--;
 
 				this.SysLog(String.Format("Detached msg client: {0}", msgClient.refName));
-            }
-            finally
+
+				OnStatsDataChanged();
+			}
+			finally
             {
                 if (acquiredLock)
                     Monitor.Exit(lstClientsLockObject);
@@ -192,9 +242,9 @@ namespace Sendi.Dispatcher
             this.EventStopped.Set();
         }
 
-        private IMessage GetNextMessage()
+        private AbstractMessage GetNextMessage()
         {
-            IMessage msg = null;
+			AbstractMessage msg = null;
             bool acquiredLock = false;
             try
             {
@@ -219,12 +269,12 @@ namespace Sendi.Dispatcher
             Boolean handleMsg = false;
             Boolean forwardMsg = false;
 
-            if (string.Compare(msg.MessageData.TargetRefname,"*",true)==0)
+            if (string.Compare(msg.TargetRefname,"*",true)==0)
             {
                 handleMsg = true;
                 forwardMsg = true;
             }
-            else if (string.Compare(msg.MessageData.TargetRefname, this.refName, true) == 0)
+            else if (string.Compare(msg.TargetRefname, this.refName, true) == 0)
             {
                 handleMsg = true;
                 forwardMsg = false;
@@ -237,7 +287,7 @@ namespace Sendi.Dispatcher
 
             if (handleMsg)
             {
-                switch (msg.MessageData.Cmd)
+                switch (msg.Cmd)
                 {
                     case EnmSystemCommands.CMD_START_DETAILED_LOGGING:
                         this.detailedLoggingActive = true;
@@ -249,7 +299,7 @@ namespace Sendi.Dispatcher
                         this.detailedLoggingActive = false;
                         break;
                     case EnmSystemCommands.CMD_RESEND_ALL_MSGS_OF_TYPE:
-                        this.GetBufferedMessagesOfType(int.Parse(msg.MessageData.CmdInfo));
+                        this.GetBufferedMessagesOfType(int.Parse(msg.CmdInfo));
                         break;
                 }
             }
@@ -298,14 +348,15 @@ namespace Sendi.Dispatcher
         {
             Boolean forwardMessage;
 
-            IMessage m = this.GetNextMessage();
+			AbstractMessage m = this.GetNextMessage();
             while (m != null)
             {
                 // add message to history list
                 this.messageHistory.Add(m);
                 this.sendiStats.TotalNrReceivedMessages++;
-                //
-                forwardMessage = true;
+                OnStatsDataChanged_Delayed();
+				//
+				forwardMessage = true;
                 if (m is SystemCommandMessage scm)
                 {
                     forwardMessage = this.HandleSystemCommandMessage(scm);
@@ -319,7 +370,7 @@ namespace Sendi.Dispatcher
             }
         }
 
-        private void DistributeMessageToAllClients(IMessage m)
+        private void DistributeMessageToAllClients(AbstractMessage m)
         {
             bool acquiredLock = false; 
             try
@@ -328,10 +379,11 @@ namespace Sendi.Dispatcher
 
                 foreach (IMessageClientForDispatcher msgClient in _msgClients)
                 {
-                    if (msgClient.GetReceiveOwnMessages() || !Object.ReferenceEquals(m.Sender, msgClient))
+                    if (msgClient.GetReceiveOwnMessages() || !Object.ReferenceEquals(m.MessageConfig.Sender, msgClient))
                     {
                         msgClient.DropMessage(m);
 						this.sendiStats.TotalNrSentMessages++;
+                        OnStatsDataChanged_Delayed();
 					}
 				}
             }
@@ -347,7 +399,7 @@ namespace Sendi.Dispatcher
             MessageHistoryOneMessageType omth = this.messageHistory.GetMessageListOfType(msgTypeId);
             if(omth!=null)
             {
-                foreach (KeyValuePair<int, IMessage> kvp in omth)
+                foreach (KeyValuePair<int, AbstractMessage> kvp in omth)
                 {
                     this.DistributeMessageToAllClients(kvp.Value);
                 }
@@ -356,10 +408,6 @@ namespace Sendi.Dispatcher
 
         private SendiStats sendiStats;
 
-        public SendiStats GetStats()
-        {
-            return sendiStats;
-        }
         public virtual void Close()
         {
             bool acquiredLock = false;            
@@ -379,5 +427,52 @@ namespace Sendi.Dispatcher
                     Monitor.Exit(lstClientsLockObject);
             }
         }
-    }
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!_disposed)
+			{
+			    if (disposing)
+			    {
+				    // TODO: dispose managed state (managed objects).
+			    }
+
+			    // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+			    // TODO: set large fields to null.
+
+                if(timer!=null)
+                {
+					timer.Dispose();
+                    timer = null;
+				}
+
+			_disposed = true;
+			}
+		}
+
+		~MessageDispatcher()
+		{
+			Dispose(false);
+		}
+	}
+
+    public class StatsDataChangedEventArgs
+    {
+		public int TotalNrAttachedClients { get; private set; }
+		public int TotalNrReceivedMessages { get; private set; }
+		public int TotalNrSentMessages { get; private set; }
+
+        public StatsDataChangedEventArgs(SendiStats sendiStats)
+        {
+            TotalNrAttachedClients = sendiStats.TotalNrAttachedClients;
+            TotalNrReceivedMessages = sendiStats.TotalNrReceivedMessages;
+            TotalNrSentMessages = sendiStats.TotalNrSentMessages;
+        }
+	}
+
 }

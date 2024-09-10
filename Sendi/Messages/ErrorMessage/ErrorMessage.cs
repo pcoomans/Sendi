@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Text;
+﻿using System.Runtime.Serialization;
 
 namespace Sendi.Messages.ErrorMessage
 {
-    public enum EnmErrors
+	public enum EnmErrors
     {
 
     }
@@ -17,38 +14,27 @@ namespace Sendi.Messages.ErrorMessage
     }
 
     [DataContract]
-    public class ErrorData : IMessageData
+    public class ErrorMessage : AbstractMessage
     {
-        [DataMember]
-        public EnmErrors Error { get; private set; }
+		[DataMember]
+		public EnmErrors Error { get; private set; }
 
-        [DataMember]
-        public EnmExceptionLevel ExceptionLevel { get; private set; }
+		[DataMember]
+		public EnmExceptionLevel ExceptionLevel { get; private set; }
 
-        [DataMember]
-        public string ErrorInfo { get; private set; }
+		[DataMember]
+		public string ErrorInfo { get; private set; }
 
-        public ErrorData(EnmErrors Error, EnmExceptionLevel exceptionLevel, string errorInfo)
-        {
-            this.Error = Error;
-            this.ExceptionLevel = ExceptionLevel;
-            this.ErrorInfo = errorInfo;
-        }
-        public int GetMessageId()
-        {
-            return (int)this.Error;
-        }
+		public ErrorMessage(EnmErrors Error, EnmExceptionLevel exceptionLevel, string errorInfo)
+		{
+			this.Error = Error;
+			this.ExceptionLevel = ExceptionLevel;
+			this.ErrorInfo = errorInfo;
+		}
 
-        public override string ToString()
-        {
-            return $"ErrorData: Error={this.Error}/ExceptionLevel={this.ExceptionLevel}/ErrorInfo={this.ErrorInfo}";
-        }
-
-    }
-
-    public class ErrorMessage : Message<ErrorData>
-    {
-        public ErrorMessage(ErrorData data) : base(data)
-        { }
-    }
+		public override string ToString()
+		{
+			return $"ErrorMessage: Error={this.Error}/ExceptionLevel={this.ExceptionLevel}/ErrorInfo={this.ErrorInfo}";
+		}
+	}
 }

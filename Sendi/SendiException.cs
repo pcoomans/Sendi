@@ -27,32 +27,32 @@ namespace Sendi
             Fatal
         }
 
-        public Int32 exceptionId;
-        public EnmErrorLevel errorLevel;
+        public Int32 ExceptionId { get; private set; }
+        public EnmErrorLevel ErrorLevel { get; private set; }   
 
         /// <summary>
-        /// Default exception without any data
+        /// Default Sendi Exception without any data
         /// </summary>
         public SendiException()
             : base()
         {
-            this.exceptionId = 0;
-            this.errorLevel = EnmErrorLevel.Undefined;
+            ExceptionId = 0;
+            ErrorLevel = EnmErrorLevel.Undefined;
         }
 
         /// <summary>
-        /// Qlsa Exception with string message
+        /// Sendi Exception with string message
         /// </summary>
         /// <param name="message"></param>
         public SendiException(string message, Int32 exceptionId, EnmErrorLevel errorLevel = EnmErrorLevel.Fatal)
             : base(message)
         {
-            this.exceptionId = exceptionId;
-            this.errorLevel = errorLevel;
+            ExceptionId = exceptionId;
+            ErrorLevel = errorLevel;
         }
 
         /// <summary>
-        /// Qlsa Exception, includes innerexception 
+        /// Sendi Exception, includes InnerException 
         /// message string and stack trace.
         /// </summary>
         /// <param name="message"></param>
@@ -60,24 +60,24 @@ namespace Sendi
         public SendiException(string message, Int32 exceptionId, Exception innerException, EnmErrorLevel errorLevel = EnmErrorLevel.Fatal)
             : base(message, innerException)
         {
-            this.exceptionId = exceptionId;
-            this.errorLevel = errorLevel;
+            ExceptionId = exceptionId;
+            ErrorLevel = errorLevel;
         }
 
         [SecurityPermissionAttribute(SecurityAction.Demand, SerializationFormatter = true)]
         protected SendiException(SerializationInfo info,StreamingContext context)
             : base(info, context)
         {
-            this.exceptionId = (int)info.GetValue("SendiException.exceptionId", typeof(int));
-            this.errorLevel = (EnmErrorLevel)info.GetValue("SendiException.errorLevel", typeof(EnmErrorLevel));
+            ExceptionId = (int)info.GetValue("SendiException.exceptionId", typeof(int));
+            ErrorLevel = (EnmErrorLevel)info.GetValue("SendiException.errorLevel", typeof(EnmErrorLevel));
         }
 
         public override string ToString()
         {
-            if (this.InnerException==null)
-                return String.Format("Sendi Exception(id:{0}) {1} / errorLevel:{2}", this.exceptionId, this.Message, this.errorLevel.ToString());
+            if (InnerException==null)
+                return String.Format($"Sendi Exception(id:{ExceptionId}) {Message} / errorLevel:{ErrorLevel.ToString()}");
             else
-                return String.Format("Sendi Exception(id:{0}) {1} / innerException: {2} / errorLevel:{3}", this.exceptionId, this.Message, this.InnerException.ToString(), this.errorLevel.ToString());
+                return String.Format($"Sendi Exception(id:{ExceptionId}) {Message} / innerException: {InnerException.ToString()} / errorLevel:{ErrorLevel.ToString()}");
         }
     }
 }

@@ -1,34 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Text;
+﻿using System.Runtime.Serialization;
 
 namespace Sendi.Messages.SystemLogMessage
 {
-    public class SystemLogData : IMessageData
-    {
+	public class SystemLogMessage : AbstractMessage
+	{
         [DataMember]
         public string LogString { get; private set; }
 
-        public SystemLogData(string logString)
+        public SystemLogMessage(string logString)
         {
             this.LogString = logString;
         }
 
         public override string ToString()
         {
-            return $"SystemLogData: LogString={this.LogString}";
-        }
-
-        public int GetMessageId()
-        {
-            return 1;
+            return $"SystemLogMessage: LogString={this.LogString}";
         }
     }
 
-    public class SystemLogMessage : Message<SystemLogData>
-    {
-        public SystemLogMessage(SystemLogData data) : base(data)
-        { }
-    }
 }

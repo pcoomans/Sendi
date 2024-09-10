@@ -7,7 +7,7 @@ namespace Sendi.Client
     {
         bool GetReceiveOwnMessages();
 
-        void DropMessage(IMessage message);
+        void DropMessage(AbstractMessage message);
         void SetDispatcher(MessageDispatcher dispatcher);
     }
 
