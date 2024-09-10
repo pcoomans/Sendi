@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Text;
+﻿using System.Runtime.Serialization;
 
 namespace Sendi.Messages.LogMessage
 {
-    public enum EnmLogLevel
+	public enum EnmLogLevel
     {
         info,
         debug,

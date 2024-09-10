@@ -1,10 +1,9 @@
 ﻿using Sendi.Messages;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace Sendi.History
 {
-    public class MessageHistory : Dictionary<int, MessageHistoryOneMessageType>
+	public class MessageHistory : Dictionary<int, MessageHistoryOneMessageType>
     {
         public void Add(AbstractMessage m)
         {

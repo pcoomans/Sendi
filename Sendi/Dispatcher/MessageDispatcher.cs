@@ -2,7 +2,7 @@
 // Project:      Sendi
 // Class Name:   MessageDispatcher
 // Description:  This class is the central unit in the internal messaging system.
-//               Clients based on AbstractMessageClientt can connect to send
+//               Clients based on AbstractMessageClient can connect to send
 //               and receive messages
 //*************************************************************************
 
@@ -20,7 +20,7 @@ using System.Timers;
 
 namespace Sendi.Dispatcher
 {
-    public class MessageDispatcher : MarshalByRefObject, IMessageComponent //, IDisposable
+    public class MessageDispatcher : MarshalByRefObject, IMessageComponent, IDisposable
     {
         #region Singleton related
 
@@ -116,7 +116,9 @@ namespace Sendi.Dispatcher
 
         const int MAX_MUTEX_WAIT_TIME = 5000;
 
-        private MessageDispatcher()
+		private bool _disposed = false;
+
+		private MessageDispatcher()
         {
             sendiStats = new SendiStats();
 
@@ -425,7 +427,39 @@ namespace Sendi.Dispatcher
                     Monitor.Exit(lstClientsLockObject);
             }
         }
-    }
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!_disposed)
+			{
+			    if (disposing)
+			    {
+				    // TODO: dispose managed state (managed objects).
+			    }
+
+			    // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+			    // TODO: set large fields to null.
+
+                if(timer!=null)
+                {
+					timer.Dispose();
+                    timer = null;
+				}
+
+			_disposed = true;
+			}
+		}
+
+		~MessageDispatcher()
+		{
+			Dispose(false);
+		}
+	}
 
     public class StatsDataChangedEventArgs
     {

@@ -11,17 +11,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sendi.Client
 {
-    /// <summary>
-    /// <c>AbstractMessageClient</c> is the base class for message clients.
-    /// To be used in combination with <c>MessageDispatcher</c>
-    /// </summary>
-    public abstract class AbstractMessageClient : IMessageClient, IMessageClientForDispatcher
+	/// <summary>
+	/// <c>AbstractMessageClient</c> is the base class for message clients.
+	/// To be used in combination with <c>MessageDispatcher</c>
+	/// </summary>
+	public abstract class AbstractMessageClient : IMessageClient, IMessageClientForDispatcher
     {
 
 
@@ -177,24 +175,44 @@ namespace Sendi.Client
             int messageTypeId = msgExample.MessageConfig.GetMessageTypeId();
             this.acceptedMsgTypeIds[messageTypeId] = refHandleMessageFunction;
         }
-        //public virtual void AddMsgTypeToFilter(Type msgType)
-        //{
-        //    //            object result = Activator.CreateInstance(msgType);
+        public virtual void AddMsgTypeToFilter(Type msgType, MessageReceived refHandleMessageFunction)
+        {
+            //            object result = Activator.CreateInstance(msgType);
 
-        //    // CALL STATIC CONSTRUCTIOR ??
-        //    //object result = Activator.CreateInstance(msgType);
+            // CALL STATIC CONSTRUCTIOR ??
+            object result = Activator.CreateInstance(msgType);
+            if( result is AbstractMessage msg)
+            {
+			    int _messageTypeId = msg.MessageConfig.GetMessageTypeId();
+			    this.acceptedMsgTypeIds[_messageTypeId] = refHandleMessageFunction;
 
-        //    System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(msgType.TypeHandle);
+            }
 
-        //    FieldInfo info = msgType.GetField("MessageTypeId", BindingFlags.Static);
-        //    int messageTypeId = (int)info.GetValue(null);
+            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(msgType.TypeHandle);
 
-        //    if (!this.acceptedMsgTypeIds.Contains(messageTypeId))
-        //    {
-        //        this.acceptedMsgTypeIds.Add(messageTypeId);
-        //    }
-        //}
-        public virtual void RemoveMsgTypeFromFilter(Type msgType)
+            FieldInfo info = msgType.GetField("MessageTypeId", BindingFlags.Static);
+            int messageTypeId = (int)info.GetValue(null);
+
+		}
+
+		//public virtual void AddMsgTypeToFilter(Type msgType)
+		//{
+		//    //            object result = Activator.CreateInstance(msgType);
+
+		//    // CALL STATIC CONSTRUCTIOR ??
+		//    //object result = Activator.CreateInstance(msgType);
+
+		//    System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(msgType.TypeHandle);
+
+		//    FieldInfo info = msgType.GetField("MessageTypeId", BindingFlags.Static);
+		//    int messageTypeId = (int)info.GetValue(null);
+
+		//    if (!this.acceptedMsgTypeIds.Contains(messageTypeId))
+		//    {
+		//        this.acceptedMsgTypeIds.Add(messageTypeId);
+		//    }
+		//}
+		public virtual void RemoveMsgTypeFromFilter(Type msgType)
         {
             FieldInfo info = msgType.GetField("MessageTypeId", BindingFlags.Static);
             int messageTypeId = (int)info.GetValue(null);

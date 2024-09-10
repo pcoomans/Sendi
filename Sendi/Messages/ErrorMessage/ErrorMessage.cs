@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Text;
+﻿using System.Runtime.Serialization;
 
 namespace Sendi.Messages.ErrorMessage
 {
-    public enum EnmErrors
+	public enum EnmErrors
     {
 
     }

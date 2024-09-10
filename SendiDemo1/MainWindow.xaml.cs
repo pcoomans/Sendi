@@ -40,8 +40,9 @@ namespace SendiDemo1
 			smc = new SimpleMessageClient("main");
 			smc.SetDispatcher(mdp);
 			smc.SetFilterMode(AbstractMessageClient.EnmFilterMode.Filter);
-			smc.AddMsgTypeToFilter(new MsgColor(null), MsgColorReceived);
+			smc.AddMsgTypeToFilter(typeof(MsgColor), MsgColorReceived);
 			smc.Start();
+			smc.receiveOwnMessages = false;
 		}
 
 		private void Mdp_StatsDataChanged(object sender, StatsDataChangedEventArgs e)
