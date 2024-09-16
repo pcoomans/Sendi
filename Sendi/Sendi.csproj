@@ -2,19 +2,27 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
+    <AssemblyVersion>2.0.0.1</AssemblyVersion>
+    <FileVersion>2.0.0.1</FileVersion>
     <OutputType>Library</OutputType>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>Library to create a loosely coupled structure within an application</Description>
   </PropertyGroup>
   <PropertyGroup>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>$(AssemblyVersion)</Version>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="GuiViewer\**" />
     <EmbeddedResource Remove="GuiViewer\**" />
     <None Remove="GuiViewer\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

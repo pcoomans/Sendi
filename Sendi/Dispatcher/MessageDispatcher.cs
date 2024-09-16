@@ -24,7 +24,7 @@ namespace Sendi.Dispatcher
     {
         #region Singleton related
 
-        private static MessageDispatcher messageDispatcher = new MessageDispatcher();
+        private static readonly MessageDispatcher messageDispatcher = new MessageDispatcher();
         public static MessageDispatcher GetMessageDispatcher()
         {
             return messageDispatcher;
