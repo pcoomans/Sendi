@@ -177,23 +177,18 @@ namespace Sendi.Client
             int messageTypeId = msgExample.GetMessageTypeId();
             this.acceptedMsgTypeIds[messageTypeId] = refHandleMessageFunction;
         }
-        //public virtual void AddMsgTypeToFilter(Type msgType)
-        //{
-        //    //            object result = Activator.CreateInstance(msgType);
+        public virtual void AddMsgTypeToFilter(Type msgType, MessageReceived refHandleMessageFunction)
+        {
+            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(msgType.TypeHandle);
 
-        //    // CALL STATIC CONSTRUCTIOR ??
-        //    //object result = Activator.CreateInstance(msgType);
+            FieldInfo info = msgType.GetField("MessageTypeId", BindingFlags.Static);
+            int messageTypeId = (int)info.GetValue(null);
 
-        //    System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(msgType.TypeHandle);
-
-        //    FieldInfo info = msgType.GetField("MessageTypeId", BindingFlags.Static);
-        //    int messageTypeId = (int)info.GetValue(null);
-
-        //    if (!this.acceptedMsgTypeIds.Contains(messageTypeId))
-        //    {
-        //        this.acceptedMsgTypeIds.Add(messageTypeId);
-        //    }
-        //}
+            if (!this.acceptedMsgTypeIds.ContainsKey(messageTypeId))
+            {
+                this.acceptedMsgTypeIds.Add(messageTypeId, refHandleMessageFunction);
+            }
+        }
         public virtual void RemoveMsgTypeFromFilter(Type msgType)
         {
             FieldInfo info = msgType.GetField("MessageTypeId", BindingFlags.Static);

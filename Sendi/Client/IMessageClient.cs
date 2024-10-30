@@ -24,15 +24,21 @@ namespace Sendi.Client
         /// <summary>
         /// Clear list of selected MsgTypes from filter
         /// </summary>
-        /// <param name="msgType"></param>
         void ClearFilter();
 
         /// <summary>
         /// Add a MsgType to the filter, to start receiving it
         /// </summary>
-        /// <param name="msgType"></param>
-        //void AddMsgTypeToFilter(Type msgType);
+        /// <param name="msgExample">An instance of the type of message to handle</param>
+        /// <param name="refToFunctionToHandleMessages">Reference to function that will handle the received messages</param>
         void AddMsgTypeToFilter(IMessage msgExample, MessageReceived refToFunctionToHandleMessages);
+
+        /// <summary>
+        /// Add a MsgType to the filter, to start receiving it
+        /// </summary>
+        /// <param name="msgType">The type of message to handle</param>
+        /// <param name="refToFunctionToHandleMessages">Reference to function that will handle the received messages</param>
+        void AddMsgTypeToFilter(Type msgType, MessageReceived refHandleMessageFunction);
 
         /// <summary>
         /// Remove a MsgType from the filter, to receive it no longer 
